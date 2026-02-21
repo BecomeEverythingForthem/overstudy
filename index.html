@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kotoba">
+<meta name="theme-color" content="#0a0c10">
+<title>Kotoba Trainer Pro</title>
+<style>
+:root{
+  --bg-deep:#0a0c10;--bg-panel:#10141c;--bg-card:#161b26;--bg-card2:#1c2333;
+  --accent:#e8a838;--accent2:#f0c060;--accent-dim:#8a6020;
+  --red:#c94040;--green:#3a9a5c;--blue:#3a72b0;--purple:#9c55d0;
+  --text:#d4cfc4;--text-dim:#6e7a8a;--text-bright:#f0ebe0;
+  --border:#2a3344;--scan:rgba(232,168,56,0.03);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;background:var(--bg-deep);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scan) 2px,var(--scan) 4px);pointer-events:none;z-index:9999;}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.18;pointer-events:none;z-index:0;}
+#app{position:relative;z-index:1;min-height:100vh;}
+.container{max-width:680px;margin:0 auto;padding:20px 16px 60px;animation:screenIn 0.22s ease;}
+@keyframes screenIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+.ark-header{display:flex;align-items:center;gap:12px;padding:14px 0 20px;border-bottom:1px solid var(--border);margin-bottom:20px;position:relative;}
+.ark-header::after{content:'';position:absolute;bottom:-1px;left:0;width:80px;height:2px;background:var(--accent);}
+.ark-title{font-family:'Rajdhani','Arial Narrow',Arial,sans-serif;font-size:22px;font-weight:700;color:var(--text-bright);letter-spacing:3px;text-transform:uppercase;}
+.ark-title span{color:var(--accent);}
+.ark-badge{font-family:'Share Tech Mono','Courier New',monospace;font-size:10px;color:var(--accent);border:1px solid var(--accent-dim);padding:2px 6px;background:rgba(232,168,56,0.07);letter-spacing:2px;}
+
+.back{position:static!important;width:auto!important;padding:6px 14px!important;background:transparent!important;color:var(--text-dim)!important;border:1px solid var(--border)!important;border-radius:0!important;font-family:'Share Tech Mono',monospace!important;font-size:11px!important;letter-spacing:2px!important;touch-action:manipulation!important;-webkit-tap-highlight-color:transparent!important;cursor:pointer;transition:all 0.2s;margin-right:12px;justify-content:center!important;}
+.back:hover{color:var(--accent)!important;border-color:var(--accent-dim)!important;background:rgba(232,168,56,0.05)!important;}
+.back::before{content:'◄ ';}
+.back::after{display:none!important;}
+
+button{width:100%;padding:13px 18px;margin:5px 0;border:1px solid var(--border);background:var(--bg-card);color:var(--text);font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:15px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:all 0.18s ease;text-align:left;display:flex;align-items:center;gap:10px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border-radius:0;outline:none;}
+button::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);opacity:0;transition:opacity 0.2s;}
+button:hover{background:var(--bg-card2);color:var(--accent);border-color:var(--accent-dim);}
+button:hover::before{opacity:1;}
+button::after{content:'';position:absolute;bottom:-1px;right:-1px;width:13px;height:13px;background:var(--bg-deep);transform:translate(50%,50%) rotate(45deg);pointer-events:none;transition:background 0.18s;}
+button:hover::after{background:var(--bg-card2);}
+button.correct::after{background:rgba(58,154,92,0.15)!important;}
+button.wrong::after{background:rgba(201,64,64,0.15)!important;}
+button.played::after{background:var(--bg-panel)!important;}
+button.choiceBtn{text-align:center;justify-content:center;}
+button.choiceBtn::after{display:none;}
+button.correct{background:rgba(58,154,92,0.15)!important;border-color:#3a9a5c!important;color:#5ecf8a!important;}
+button.correct::before{background:#3a9a5c;opacity:1;}
+button.wrong{background:rgba(201,64,64,0.15)!important;border-color:#c94040!important;color:#e86060!important;}
+button.wrong::before{background:#c94040;opacity:1;}
+button.played{background:var(--bg-panel)!important;border-color:var(--border)!important;color:var(--text-dim)!important;opacity:0.65;}
+button:disabled{opacity:0.4;cursor:not-allowed;}
+button:disabled:hover{background:var(--bg-card);color:var(--text);border-color:var(--border);}
+button:disabled:hover::before,button:disabled:hover::after{opacity:0;}
+
+.ark-stat-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.ark-stat{flex:1;min-width:90px;background:var(--bg-card);border:1px solid var(--border);padding:10px 14px;clip-path:polygon(8px 0%,100% 0%,100% calc(100% - 8px),calc(100% - 8px) 100%,0% 100%,0% 8px);}
+.ark-stat-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;}
+.ark-stat-value{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:var(--accent);line-height:1.1;}
+
+.ark-section{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin:18px 0 10px;display:flex;align-items:center;gap:8px;}
+.ark-section::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--accent-dim),transparent);}
+
+.xp-bar-wrap{background:var(--bg-card);border:1px solid var(--border);padding:12px 14px;margin-bottom:14px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);}
+.xp-bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.xp-rank{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;}
+.xp-nums{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);}
+.xp-bar-bg{height:6px;background:var(--border);position:relative;overflow:hidden;}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent-dim),var(--accent));box-shadow:0 0 8px var(--accent);transition:width 0.6s ease;}
+.xp-bar-shine{position:absolute;top:0;left:-60px;width:40px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);animation:xpShine 2s infinite;}
+@keyframes xpShine{0%{left:-60px;}100%{left:110%}}
+
+.ark-progress{height:3px;background:var(--border);margin:6px 0;}
+.ark-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent-dim),var(--accent));transition:width 0.4s ease;box-shadow:0 0 6px var(--accent);}
+
+.card{font-family:'Rajdhani','Arial Narrow',Arial,sans-serif;font-size:52px;font-weight:700;color:var(--text-bright);margin:16px 0;padding:28px 20px;background:var(--bg-card);border:1px solid var(--border);border-top:3px solid var(--accent);position:relative;clip-path:polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,0 100%);text-shadow:0 0 30px rgba(232,168,56,0.2);letter-spacing:4px;text-align:center;}
+.card::before{content:'OPERATOR DATA';position:absolute;top:8px;left:12px;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--accent);opacity:0.6;}
+
+.combo-display{text-align:center;padding:6px 0;font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--accent2);letter-spacing:3px;text-shadow:0 0 16px rgba(240,192,96,0.5);animation:comboPop 0.3s ease;}
+@keyframes comboPop{from{transform:scale(1.3);}to{transform:scale(1);}}
+
+.ark-lives{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;color:var(--red);letter-spacing:2px;padding:8px 14px;background:rgba(201,64,64,0.08);border:1px solid rgba(201,64,64,0.25);border-left:3px solid var(--red);margin-bottom:10px;display:inline-block;}
+
+input[type=text],input[type=number],textarea{width:100%;padding:11px 14px;margin:6px 0;background:var(--bg-panel);border:1px solid var(--border);border-left:3px solid var(--accent-dim);color:var(--text-bright);font-family:'Share Tech Mono','Courier New',monospace;font-size:13px;outline:none;transition:border-color 0.2s;border-radius:0;}
+input[type=text]:focus,input[type=number]:focus,textarea:focus{border-color:var(--accent);border-left-color:var(--accent);box-shadow:0 0 0 1px rgba(232,168,56,0.15);}
+input[type=file]{color:var(--text-dim);font-size:12px;margin:6px 0;display:block;}
+input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;vertical-align:middle;}
+input[type=range]{accent-color:var(--accent);cursor:pointer;background:transparent;border:none;border-left:none;padding:0;width:100%;margin-top:16px;}
+label{font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px;padding:6px 0;letter-spacing:1px;}
+textarea{resize:vertical;min-height:100px;line-height:1.5;}
+hr{border:none;border-top:1px solid var(--border);margin:16px 0;}
+#info{font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:1px;padding:10px;margin-top:8px;text-align:center;}
+
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.ach-card{background:var(--bg-card);border:1px solid var(--border);padding:12px;clip-path:polygon(8px 0%,100% 0%,100% calc(100% - 8px),calc(100% - 8px) 100%,0% 100%,0% 8px);position:relative;overflow:hidden;}
+.ach-card.unlocked{border-color:var(--accent-dim);}
+.ach-card.unlocked::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent-dim),var(--accent));}
+.ach-card.locked{opacity:0.42;filter:grayscale(0.5);}
+.ach-icon{font-size:24px;margin-bottom:4px;}
+.ach-name{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--text-bright);letter-spacing:1px;}
+.ach-desc{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:2px;line-height:1.4;}
+.ach-reward{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent);margin-top:4px;}
+
+.daily-card{background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--blue);padding:12px 14px;margin:6px 0;display:flex;align-items:center;gap:12px;}
+.daily-card.done{border-left-color:var(--green);opacity:0.7;}
+.daily-check{font-size:18px;min-width:24px;}
+.daily-info{flex:1;}
+.daily-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--text-bright);letter-spacing:1px;}
+.daily-prog{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:2px;}
+.daily-reward{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent);}
+
+.levelup-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.88);animation:fadeOvIn 0.3s ease;}
+@keyframes fadeOvIn{from{opacity:0;}to{opacity:1;}}
+.levelup-box{text-align:center;padding:40px 48px;background:var(--bg-card);border:1px solid var(--accent);clip-path:polygon(20px 0%,100% 0%,100% calc(100% - 20px),calc(100% - 20px) 100%,0% 100%,0% 20px);position:relative;animation:levelupPop 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes levelupPop{from{transform:scale(0.7);opacity:0;}to{transform:scale(1);opacity:1;}}
+.levelup-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(232,168,56,0.08) 0%,transparent 70%);pointer-events:none;}
+.levelup-label{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--accent);margin-bottom:8px;}
+.levelup-num{font-family:'Rajdhani',sans-serif;font-size:80px;font-weight:700;color:var(--accent);line-height:1;text-shadow:0 0 40px rgba(232,168,56,0.6);}
+.levelup-rank{font-family:'Rajdhani',sans-serif;font-size:20px;color:var(--text-bright);letter-spacing:4px;margin-top:6px;}
+
+.ach-toast{position:fixed;top:16px;right:16px;z-index:10001;background:var(--bg-card);border:1px solid var(--accent-dim);border-left:3px solid var(--accent);padding:12px 16px;max-width:280px;clip-path:polygon(8px 0%,100% 0%,100% calc(100% - 8px),calc(100% - 8px) 100%,0% 100%,0% 8px);animation:toastIn 0.3s ease;}
+@keyframes toastIn{from{transform:translateX(120%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.ach-toast-title{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);}
+.ach-toast-name{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--text-bright);letter-spacing:1px;}
+
+.streak-fire{font-size:22px;animation:flicker 1.2s infinite alternate;}
+@keyframes flicker{from{text-shadow:0 0 4px #e87000;}to{text-shadow:0 0 16px #ffb000,0 0 32px #ff6000;}}
+
+.block-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;}
+.corner-deco{position:fixed;pointer-events:none;z-index:2;}
+.corner-deco.tl{top:0;left:0;width:80px;height:80px;border-top:2px solid var(--accent-dim);border-left:2px solid var(--accent-dim);}
+.corner-deco.br{bottom:0;right:0;width:80px;height:80px;border-bottom:2px solid var(--accent-dim);border-right:2px solid var(--accent-dim);}
+.ark-ticker{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent-dim);letter-spacing:2px;border-top:1px solid var(--border);padding:6px 0;margin-top:12px;}
+.ark-summary-big{font-family:'Rajdhani',sans-serif;font-size:60px;font-weight:700;color:var(--accent);line-height:1;text-shadow:0 0 40px rgba(232,168,56,0.4);text-align:center;}
+#furigana{font-family:'Share Tech Mono',monospace!important;font-size:18px!important;color:var(--accent)!important;letter-spacing:3px;padding:8px;background:rgba(232,168,56,0.05);border:1px solid var(--accent-dim);margin-top:8px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="corner-deco tl"></div>
+<div class="corner-deco br"></div>
+<div id="app"></div>
+<script>
+const app=document.getElementById("app");
+
+/* ── STATE ── */
+// Safe localStorage parser — returns fallback if missing or corrupt
+function lsGet(key, fallback){
+  try{let v=localStorage.getItem(key);return v!==null?JSON.parse(v):fallback;}
+  catch(e){return fallback;}
+}
+
+let profiles     = lsGet("profiles", {});
+let globalStats  = lsGet("globalStats", {xp:0,level:0,totalCorrect:0,totalSessions:0,grindDays:0,lastDay:''});
+let playedGroups = lsGet("playedGroups", {});
+let achievements = lsGet("achievements", {});
+let dailyMissions= lsGet("dailyMissions", {date:'',missions:[],done:[],progress:{}});
+
+// ── Sanitize profiles: remove null/corrupt entries, repair missing fields ──
+(function sanitizeProfiles(){
+  if(!profiles || typeof profiles !== 'object'){profiles={};return;}
+  Object.keys(profiles).forEach(name=>{
+    let p=profiles[name];
+    if(!p || typeof p !== 'object'){
+      delete profiles[name]; // Remove corrupt entry
+    } else {
+      if(!Array.isArray(p.words)) p.words=[];
+      if(typeof p.xp !== 'number') p.xp=0;
+      // Repair any corrupt word entries
+      p.words=p.words.filter(w=>w && typeof w==='object' && w.kanji);
+      p.words.forEach(w=>{
+        if(typeof w.correct !== 'number') w.correct=0;
+        if(typeof w.wrong   !== 'number') w.wrong=0;
+        if(!w.hira) w.hira='';
+        if(!w.arti) w.arti='';
+      });
+    }
+  });
+})();
+
+// ── Sanitize globalStats: fill missing fields ──
+globalStats = Object.assign({xp:0,level:0,totalCorrect:0,totalSessions:0,grindDays:0,lastDay:''}, globalStats||{});
+if(typeof globalStats.xp !== 'number') globalStats.xp=0;
+
+let currentProfile=null,words=[],sessionWords=[],gameMode="",gameType="",currentWord={};
+let stepSize=25,currentStepAmount=0,answerDelay=1500,hardcoreMode=false,hardcoreTimer=2000;
+let lives=4,timerInterval=null,isLocked=false;
+let sessionCorrect=0,sessionTotal=0,sessionWrong=0,combo=0,sessionComboMax=0;
+let currentBlockStart=0,currentBlockEnd=0,isCustomMode=false,customPool=[];
+let sessionXpStart=0,sessionXpGain=0,sessionLevelStart=0;
+let _customAmt=10;
+let dailyProgress={correct:0,sessions:0,combo:0,noerror:0};
+let sessionHistory=lsGet("sessionHistory", []);
+if(!Array.isArray(sessionHistory)) sessionHistory=[];
+
+/* ── SAVE ── */
+function saveAll(){
+  localStorage.setItem("profiles",JSON.stringify(profiles));
+  localStorage.setItem("globalStats",JSON.stringify(globalStats));
+  localStorage.setItem("playedGroups",JSON.stringify(playedGroups));
+  localStorage.setItem("achievements",JSON.stringify(achievements));
+  localStorage.setItem("dailyMissions",JSON.stringify(dailyMissions));
+  localStorage.setItem("sessionHistory",JSON.stringify(sessionHistory));
+}
+
+
+/* ── XP / LEVEL ── */
+function xpForLevel(lvl){return Math.min(100+Math.floor(lvl/10)*150,3000);}
+function calcLevel(totalXp){let l=0,x=totalXp;while(x>=xpForLevel(l)){x-=xpForLevel(l);l++;}return l;}
+function xpInCurrentLevel(totalXp){let l=0,x=totalXp;while(x>=xpForLevel(l)){x-=xpForLevel(l);l++;}return x;}
+function getRankTitle(level){
+  if(level>=80)return{title:"SUPREME OPERATOR",color:"#ff80ff",glow:"0 0 20px rgba(255,128,255,0.6)"};
+  if(level>=60)return{title:"SENIOR OPERATOR",color:"#e8a838",glow:"0 0 16px rgba(232,168,56,0.5)"};
+  if(level>=40)return{title:"ELITE OPERATOR",color:"#3a9a5c",glow:"0 0 14px rgba(58,154,92,0.5)"};
+  if(level>=25)return{title:"FIELD OPERATOR",color:"#3a72b0",glow:"none"};
+  if(level>=10)return{title:"CADET",color:"#6e7a8a",glow:"none"};
+  return{title:"RECRUIT",color:"#4a5060",glow:"none"};
+}
+function comboMultiplier(c){if(c>=20)return 3.0;if(c>=10)return 2.0;if(c>=5)return 1.5;return 1.0;}
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+
+/* ── ACHIEVEMENTS ── */
+const ACHIEVEMENTS=[
+  {id:"first_blood", icon:"⚔️",  name:"First Blood",     desc:"Answer 1 correctly",          reward:50,   check:g=>g.totalCorrect>=1},
+  {id:"centurion",   icon:"💯",  name:"Centurion",        desc:"100 correct answers",          reward:200,  check:g=>g.totalCorrect>=100},
+  {id:"veteran",     icon:"🎖️", name:"Veteran",          desc:"500 correct answers",          reward:500,  check:g=>g.totalCorrect>=500},
+  {id:"legend",      icon:"🏆", name:"Legendary",        desc:"2000 correct answers",         reward:2000, check:g=>g.totalCorrect>=2000},
+  {id:"lv10",        icon:"⬡",  name:"Cadet Promotion",  desc:"Reach level 10",               reward:300,  check:g=>g.level>=10},
+  {id:"lv25",        icon:"⬡",  name:"Field Promotion",  desc:"Reach level 25",               reward:600,  check:g=>g.level>=25},
+  {id:"lv50",        icon:"⬡",  name:"Elite Promotion",  desc:"Reach level 50",               reward:1500, check:g=>g.level>=50},
+  {id:"lv80",        icon:"👑", name:"Supreme Class",    desc:"Reach level 80",               reward:5000, check:g=>g.level>=80},
+  {id:"combo5",      icon:"🔥", name:"Hot Streak",       desc:"5 combo in one session",       reward:75,   check:g=>g._combo>=5},
+  {id:"combo10",     icon:"💥", name:"Unstoppable",      desc:"10 combo in one session",      reward:150,  check:g=>g._combo>=10},
+  {id:"combo20",     icon:"⚡", name:"Chain Reaction",   desc:"20 combo in one session",      reward:500,  check:g=>g._combo>=20},
+  {id:"sessions10",  icon:"📋", name:"Dedicated",        desc:"Complete 10 sessions",         reward:200,  check:g=>g.totalSessions>=10},
+  {id:"sessions50",  icon:"📋", name:"Relentless",       desc:"Complete 50 sessions",         reward:800,  check:g=>g.totalSessions>=50},
+  {id:"streak3",     icon:"📅", name:"3-Day Warrior",    desc:"3 consecutive login days",     reward:150,  check:g=>g.grindDays>=3},
+  {id:"streak7",     icon:"📅", name:"Week Warrior",     desc:"7 consecutive login days",     reward:500,  check:g=>g.grindDays>=7},
+  {id:"streak30",    icon:"📅", name:"Monthly Legend",   desc:"30 consecutive login days",    reward:3000, check:g=>g.grindDays>=30},
+  {id:"perfect10",   icon:"✨", name:"Flawless",         desc:"10 correct with 0 mistakes",   reward:300,  check:g=>g._perfect},
+  {id:"speedster",   icon:"⏱️", name:"Speedster",        desc:"Win a Hardcore session",       reward:400,  check:g=>g._hardcoreWin},
+  {id:"master10",    icon:"📖", name:"Scholar",          desc:"Master 10 words (≥5 correct)", reward:100,  check:(g,p)=>p&&p.words&&p.words.filter(w=>w.correct>=5).length>=10},
+  {id:"master50",    icon:"📚", name:"Sage",             desc:"Master 50 words",              reward:500,  check:(g,p)=>p&&p.words&&p.words.filter(w=>w.correct>=5).length>=50},
+];
+
+function checkAchievements(extra={}){
+  let profile=currentProfile?profiles[currentProfile]:null;
+  let g={...globalStats,...extra};
+  let unlocked=[];
+  ACHIEVEMENTS.forEach(a=>{
+    if(!achievements[a.id]&&a.check(g,profile)){
+      achievements[a.id]={unlockedAt:Date.now()};
+      globalStats.xp+=a.reward;
+      globalStats.level=calcLevel(globalStats.xp);
+      unlocked.push(a);
+    }
+  });
+  if(unlocked.length)saveAll();
+  return unlocked;
+}
+function showAchievementToast(a){
+  let t=document.createElement("div");
+  t.className="ach-toast";
+  t.innerHTML=`<div class="ach-toast-title">⬡ ACHIEVEMENT UNLOCKED</div><div class="ach-toast-name">${a.icon} ${a.name}</div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent);margin-top:4px;">+${a.reward} XP BONUS</div>`;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.transition="opacity 0.3s";t.style.opacity="0";setTimeout(()=>t.remove(),300);},3200);
+}
+
+/* ── DAILY MISSIONS ── */
+const MISSION_POOL=[
+  {id:"m_c20",  title:"Answer 20 correctly today",  reward:100,target:20, type:"correct"},
+  {id:"m_c50",  title:"Answer 50 correctly today",  reward:250,target:50, type:"correct"},
+  {id:"m_s2",   title:"Complete 2 sessions today",  reward:80, target:2,  type:"sessions"},
+  {id:"m_cb8",  title:"Reach an 8-combo streak",    reward:120,target:8,  type:"combo"},
+  {id:"m_ne10", title:"10 correct with no mistakes",reward:150,target:10, type:"noerror"},
+  {id:"m_c100", title:"Answer 100 correctly today", reward:400,target:100,type:"correct"},
+  {id:"m_s3",   title:"Complete 3 sessions today",  reward:180,target:3,  type:"sessions"},
+  {id:"m_cb15", title:"Reach a 15-combo streak",    reward:300,target:15, type:"combo"},
+];
+
+function ensureDailyMissions(){
+  let today=new Date().toDateString();
+  if(dailyMissions.date!==today){
+    dailyMissions={date:today,missions:shuffle([...MISSION_POOL]).slice(0,3),done:[],progress:{}};
+    dailyProgress={correct:0,sessions:0,combo:0,noerror:0};
+    saveAll();
+  } else {
+    dailyProgress=dailyMissions.progress||{correct:0,sessions:0,combo:0,noerror:0};
+  }
+}
+
+function updateDailyProgress(type,val){
+  dailyProgress[type]=(dailyProgress[type]||0)+val;
+  dailyMissions.progress=dailyProgress;
+  dailyMissions.missions.forEach(m=>{
+    if(!dailyMissions.done.includes(m.id)&&(dailyProgress[m.type]||0)>=m.target){
+      dailyMissions.done.push(m.id);
+      globalStats.xp+=m.reward;
+      globalStats.level=calcLevel(globalStats.xp);
+      showMissionToast(m);
+    }
+  });
+  saveAll();
+}
+
+function showMissionToast(m){
+  let t=document.createElement("div");
+  t.className="ach-toast";
+  t.style.borderLeftColor="var(--blue)";
+  t.innerHTML=`<div class="ach-toast-title" style="color:var(--blue);">◈ MISSION COMPLETE</div><div class="ach-toast-name">${m.title}</div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent);margin-top:4px;">+${m.reward} XP</div>`;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.transition="opacity 0.3s";t.style.opacity="0";setTimeout(()=>t.remove(),300);},3500);
+}
+
+/* ── STREAK ── */
+function updateDailyStreak(){
+  let today=new Date().toDateString();
+  let yesterday=new Date(Date.now()-86400000).toDateString();
+  if(globalStats.lastDay===today)return;
+  globalStats.grindDays=(globalStats.lastDay===yesterday)?(globalStats.grindDays||0)+1:1;
+  globalStats.lastDay=today;
+  saveAll();
+}
+
+/* ── LEVEL UP OVERLAY ── */
+function showLevelUp(newLevel,cb){
+  let rank=getRankTitle(newLevel);
+  let ov=document.createElement("div");
+  ov.className="levelup-overlay";
+  ov.innerHTML=`<div class="levelup-box" style="box-shadow:${rank.glow};"><div class="levelup-label">LEVEL UP</div><div class="levelup-num" style="color:${rank.color};">${newLevel}</div><div class="levelup-rank" style="color:${rank.color};">${rank.title}</div><div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:16px;letter-spacing:2px;">TAP TO CONTINUE</div></div>`;
+  document.body.appendChild(ov);
+  let done=false;
+  function proceed(){if(done)return;done=true;ov.remove();if(cb)cb();}
+  ov.addEventListener("click",proceed);
+  setTimeout(proceed,4000);
+}
+
+/* ── XP BAR WIDGET ── */
+function renderXpBar(){
+  let lvl=globalStats.level,rank=getRankTitle(lvl);
+  let cur=xpInCurrentLevel(globalStats.xp),need=xpForLevel(lvl);
+  let pct=Math.min(100,Math.floor((cur/need)*100));
+  return `<div class="xp-bar-wrap"><div class="xp-bar-header"><div><span class="xp-rank" style="color:${rank.color};">LV ${lvl}</span><span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);margin-left:8px;letter-spacing:1px;">${rank.title}</span></div><div class="xp-nums">${cur} / ${need} XP</div></div><div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${pct}%;"></div><div class="xp-bar-shine"></div></div></div>`;
+}
+
+/* ── MENU ── */
+function renderMenu(){
+  ensureDailyMissions();updateDailyStreak();
+  let achs=checkAchievements();
+  achs.forEach((a,i)=>setTimeout(()=>showAchievementToast(a),400+i*3300));
+  let streakEmoji=globalStats.grindDays>=7?"🔥":globalStats.grindDays>=3?"🌟":"📅";
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><div><div class="ark-title">KOTOBA <span>TRAINER</span></div><div class="ark-badge">PROTOCOL v3.0 // RHODES ISLAND</div></div></div>
+    ${renderXpBar()}
+    <div class="ark-stat-row">
+      <div class="ark-stat"><div class="ark-stat-label">Operator</div><div class="ark-stat-value" style="font-size:13px;">${currentProfile||'---'}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">${streakEmoji} Streak</div><div class="ark-stat-value">${globalStats.grindDays}d</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Missions</div><div class="ark-stat-value" style="color:${dailyMissions.done.length===dailyMissions.missions.length?'var(--green)':'var(--accent)'};">${dailyMissions.done.length}/${dailyMissions.missions.length}</div></div>
+    </div>
+    <div class="ark-section">MAIN MENU</div>
+    <button data-action="renderProfile">⬡ &nbsp;Deploy Operator</button>
+    <button data-action="renderStats">▣ &nbsp;Combat Records</button>
+    <button data-action="renderAchievements">🏆 &nbsp;Achievement Gallery</button>
+    <button data-action="renderDailyMissions">◈ &nbsp;Daily Missions</button>
+    <button data-action="renderKotoba">📖 &nbsp;Vocabulary Database</button>
+    <button data-action="renderHistory">📋 &nbsp;Session History</button>
+    <button data-action="renderShare">⇪ &nbsp;Transmit Progress</button>
+    <div class="ark-ticker">// RHODES ISLAND PHARMACEUTICAL // TRAINING PROTOCOL ACTIVE // ${globalStats.grindDays} DAY STREAK //</div>
+  </div>`;
+}
+
+/* ── DAILY MISSIONS ── */
+function renderDailyMissions(){
+  ensureDailyMissions();
+  let html=dailyMissions.missions.map(m=>{
+    let done=dailyMissions.done.includes(m.id);
+    let prog=dailyProgress[m.type]||0;
+    let pct=Math.min(100,Math.floor((prog/m.target)*100));
+    return `<div class="daily-card ${done?'done':''}"><div class="daily-check">${done?'✅':'⬜'}</div><div class="daily-info"><div class="daily-title">${m.title}</div><div class="daily-prog">${Math.min(prog,m.target)} / ${m.target}${done?' — COMPLETE':''}</div><div class="ark-progress" style="margin-top:6px;"><div class="ark-progress-fill" style="width:${pct}%;"></div></div></div><div class="daily-reward">+${m.reward} XP</div></div>`;
+  }).join('');
+  let r=new Date();r.setHours(24,0,0,0);let ms=r-Date.now();
+  let hL=Math.floor(ms/3600000),mL=Math.floor((ms%3600000)/60000);
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button class="back" data-action="renderMenu">BACK</button><div class="ark-title">Daily <span>Missions</span></div><div class="ark-badge" style="margin-left:auto;">RESETS ${hL}h ${mL}m</div></div>
+    ${renderXpBar()}
+    <div class="ark-section">TODAY'S MISSIONS</div>${html}
+    <div class="ark-section">GRIND STREAK</div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);padding:20px;clip-path:polygon(8px 0%,100% 0%,100% calc(100% - 8px),calc(100% - 8px) 100%,0% 100%,0% 8px);text-align:center;">
+      <div class="streak-fire">🔥</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:50px;font-weight:700;color:var(--accent);line-height:1;">${globalStats.grindDays}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text-dim);">DAY CONSECUTIVE STREAK</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:8px;">Log in daily to keep your streak alive!</div>
+    </div>
+  </div>`;
+}
+
+/* ── ACHIEVEMENTS ── */
+function renderAchievements(){
+  let unlocked=ACHIEVEMENTS.filter(a=>achievements[a.id]).length;
+  let cards=ACHIEVEMENTS.map(a=>{
+    let done=!!achievements[a.id];
+    return `<div class="ach-card ${done?'unlocked':'locked'}"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div><div class="ach-reward">+${a.reward} XP${done?' ✓':''}</div></div>`;
+  }).join('');
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button class="back" data-action="renderMenu">BACK</button><div class="ark-title">Achievement <span>Gallery</span></div><div class="ark-badge" style="margin-left:auto;">${unlocked}/${ACHIEVEMENTS.length}</div></div>
+    <div class="ark-progress" style="margin-bottom:16px;"><div class="ark-progress-fill" style="width:${Math.floor(unlocked/ACHIEVEMENTS.length*100)}%;"></div></div>
+    <div class="ach-grid">${cards}</div>
+  </div>`;
+}
+
+/* ── PROFILE ── */
+function renderProfile(){
+  let profileNames=Object.keys(profiles).filter(n=>profiles[n]&&typeof profiles[n]==='object');
+  let listHtml=profileNames.length
+    ? profileNames.map((name,i)=>{
+        let p=profiles[name];
+        let lv=calcLevel((p&&typeof p.xp==='number'?p.xp:0));
+        return `<button id="prof-btn-${i}" data-name="${name.replace(/"/g,'&quot;')}">▶ &nbsp;${name}<span style="margin-left:auto;font-size:11px;color:var(--accent-dim);">LV${lv}</span></button>`;
+      }).join('')
+    : '<p style="color:var(--text-dim);font-family:\'Share Tech Mono\',monospace;font-size:12px;padding:10px 0;">// NO OPERATORS REGISTERED //</p>';
+
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button id="btn-back-profile" class="back">BACK</button><div class="ark-title">Operator <span>Select</span></div></div>
+    ${listHtml}
+    <div class="ark-section">REGISTER NEW OPERATOR</div>
+    <input id="pname" placeholder="OPERATOR DESIGNATION" type="text">
+    <input type="file" id="csvfile" accept=".csv,.txt" style="display:none;">
+    <button id="btn-choose-csv">📂 &nbsp;Choose CSV File</button>
+    <div id="csvFilename" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--accent-dim);padding:4px 0;letter-spacing:1px;">// NO FILE SELECTED //</div>
+    <button id="btn-import-csv">⊕ &nbsp;Import from CSV</button>
+    <hr>
+    <textarea id="txtImport" placeholder="Kanji,Hiragana,Arti — one entry per line" style="height:110px;"></textarea>
+    <button id="btn-import-text">⊕ &nbsp;Import from Text</button>
+    <hr>
+    <button id="btn-delete-profile" style="border-color:rgba(201,64,64,0.4);color:var(--text-dim);">✕ &nbsp;Remove Operator</button>
+  </div>`;
+
+  // Wire up events after render (avoids all quoting issues & PWA restrictions)
+  document.getElementById("btn-back-profile").addEventListener("click", renderMenu);
+  document.getElementById("btn-import-csv").addEventListener("click", createProfileCSV);
+  document.getElementById("btn-import-text").addEventListener("click", createProfileText);
+  document.getElementById("btn-delete-profile").addEventListener("click", deleteProfileMenu);
+
+  // File input — direct user-gesture click forwarding (works in PWA)
+  let csvInput=document.getElementById("csvfile");
+  csvInput.addEventListener("change", handleCsvFileSelected);
+  document.getElementById("btn-choose-csv").addEventListener("click", function(){
+    csvInput.value="";
+    csvInput.click();
+  });
+
+  // Profile select buttons
+  profileNames.forEach((name,i)=>{
+    let btn=document.getElementById("prof-btn-"+i);
+    if(btn) btn.addEventListener("click", function(){ selectProfile(name); });
+  });
+}
+
+function makeWordObj(kanji,hira,arti){return{kanji:kanji.trim(),hira:hira.trim(),arti:arti.trim(),correct:0,wrong:0,mastered:false,interval:1,nextReview:Date.now()};}
+function handleCsvFileSelected(){
+  let f=document.getElementById("csvfile").files[0];
+  let el=document.getElementById("csvFilename");
+  if(el&&f)el.textContent="// "+f.name+" //";
+}
+function createProfileCSV(){
+  let name=document.getElementById("pname").value.trim(),file=document.getElementById("csvfile").files[0];
+  if(!name||!file)return alert("Fill operator name & choose a CSV file");
+  let r=new FileReader();
+  r.onload=e=>{let data=[];e.target.result.split("\n").forEach(l=>{let [k,h,a]=l.split(",");if(k&&h&&a)data.push(makeWordObj(k,h,a));});
+    if(!data.length)return alert("No valid data found in CSV!");
+    profiles[name]={words:data,xp:0};saveAll();renderProfile();};
+  r.readAsText(file);
+}
+function createProfileText(){
+  let name=document.getElementById("pname").value.trim(),text=document.getElementById("txtImport").value.trim();
+  if(!name||!text)return alert("Fill name & text");
+  let data=[];text.split("\n").forEach(l=>{let [k,h,a]=l.split(",");if(k&&h&&a)data.push(makeWordObj(k,h,a));});
+  if(!data.length)return alert("Invalid text!");
+  profiles[name]={words:data,xp:0};saveAll();renderProfile();
+}
+function deleteProfileMenu(){
+  if(!Object.keys(profiles).length)return alert("No profiles yet!");
+  let names=Object.keys(profiles);
+  let listHtml=names.map((n,i)=>`<button id="del-prof-${i}" data-name="${n.replace(/"/g,'&quot;')}">${n}</button>`).join('');
+  app.innerHTML=`<div class="container"><div class="ark-header"><button id="btn-back-del" class="back">BACK</button><div class="ark-title">Remove <span>Operator</span></div></div><div class="ark-section">SELECT TO REMOVE</div>${listHtml}<button id="btn-cancel-del" style="border-color:var(--border);color:var(--text-dim);justify-content:center;margin-top:10px;">✕ CANCEL</button></div>`;
+  document.getElementById("btn-back-del").addEventListener("click", renderProfile);
+  document.getElementById("btn-cancel-del").addEventListener("click", renderProfile);
+  names.forEach((n,i)=>{
+    let btn=document.getElementById("del-prof-"+i);
+    if(btn) btn.addEventListener("click", ()=>deleteProfile(n));
+  });
+}
+function deleteProfile(name){if(confirm(`Remove "${name}"?`)){delete profiles[name];saveAll();}renderProfile();}
+function selectProfile(name){
+  let p=profiles[name];
+  if(!p||typeof p!=='object'){alert("Operator data is missing or corrupt. Please re-import.");renderProfile();return;}
+  if(!Array.isArray(p.words)) p.words=[];
+  currentProfile=name;words=[...p.words];renderGroup();
+}
+
+/* ── GROUP ── */
+function renderGroup(){
+  isCustomMode=false;
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button class="back" data-action="renderProfile">BACK</button><div class="ark-title">Mission <span>Select</span></div></div>
+    ${renderXpBar()}
+    <div class="ark-section">DEPLOYMENT SIZE</div>
+    <button data-action="chooseStep:25">⬡ &nbsp;Squad Alpha — 25 Units</button>
+    <button data-action="chooseStep:50">⬡ &nbsp;Squad Beta — 50 Units</button>
+    <button data-action="startAll">⬛ &nbsp;Full Deployment — ALL</button>
+    <button data-action="renderCustomAmount" style="border-color:var(--accent-dim);color:var(--accent);">◈ &nbsp;Custom Count</button>
+  </div>`;
+}
+
+function renderCustomAmount(){
+  isCustomMode=false;let max=words.length;_customAmt=Math.min(10,max);
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button class="back" data-action="renderGroup">BACK</button><div class="ark-title">Custom <span>Count</span></div></div>
+    <div class="ark-section">SET DEPLOYMENT COUNT</div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-top:3px solid var(--accent);padding:24px 20px;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%);margin-bottom:16px;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text-dim);margin-bottom:12px;">UNIT COUNT (MAX: ${max})</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button data-action="stepAmt:-10" style="width:52px;min-width:52px;justify-content:center;padding:10px 6px;font-size:13px;">−10</button>
+        <button data-action="stepAmt:-1"  style="width:44px;min-width:44px;justify-content:center;padding:10px 6px;font-size:13px;">−1</button>
+        <div id="amtDisplay" style="flex:1;text-align:center;font-family:'Rajdhani',sans-serif;font-size:52px;font-weight:700;color:var(--accent);text-shadow:0 0 20px rgba(232,168,56,0.4);line-height:1;">${_customAmt}</div>
+        <button data-action="stepAmt:1"   style="width:44px;min-width:44px;justify-content:center;padding:10px 6px;font-size:13px;">+1</button>
+        <button data-action="stepAmt:10"  style="width:52px;min-width:52px;justify-content:center;padding:10px 6px;font-size:13px;">+10</button>
+      </div>
+      <input id="amtSlider" type="range" min="1" max="${max}" value="${_customAmt}">
+    </div>
+    <button data-action="startCustomAmount" style="justify-content:center;font-size:16px;">⬛ &nbsp;DEPLOY</button>
+  </div>`;
+  document.getElementById("amtSlider").addEventListener("input",function(){syncSlider(this.value);});
+}
+function stepAmt(d){_customAmt=Math.max(1,Math.min(words.length,_customAmt+d));document.getElementById("amtDisplay").textContent=_customAmt;document.getElementById("amtSlider").value=_customAmt;}
+function syncSlider(v){_customAmt=parseInt(v);document.getElementById("amtDisplay").textContent=_customAmt;}
+function startCustomAmount(){currentStepAmount=_customAmt;isCustomMode=true;customPool=[...words];sessionWords=shuffle([...words]).slice(0,_customAmt);renderMode();}
+
+function chooseStep(size){
+  stepSize=size;let total=words.length,buttons="";
+  for(let start=0;start<total;start+=size){
+    let end=Math.min(start+size,total),key=currentProfile+"-"+start+"-"+end;
+    let played=playedGroups[key]?"played":"",pct=getBlockProgress(start,end),rank=getRankStyle(pct);
+    buttons+=`<button class="${played}" data-action="selectBlock:${start}:${end}" style="position:relative;overflow:hidden;box-shadow:${rank.glow};flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px;">${pct===100?"<div style='font-size:9px;letter-spacing:2px;color:#c060e8;font-weight:700;'>✦ MASTERED</div>":""}<div style="font-size:14px;letter-spacing:1px;">${start+1}–${end}${rank.emoji}</div><div style="width:100%;height:2px;background:var(--border);overflow:hidden;"><div style="height:100%;width:${pct}%;background:${rank.color};box-shadow:0 0 4px ${rank.color};"></div></div><div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${rank.color};letter-spacing:1px;">${pct}% CLEARED</div></button>`;
+  }
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button class="back" data-action="renderGroup">BACK</button><div class="ark-title">Block <span>Select</span></div></div>
+    <div class="ark-section">COMBAT ZONES — UNIT SIZE: ${size}</div>
+    <div class="block-grid">${buttons}</div>
+    <button data-action="renderCustomBlock" style="margin-top:10px;border-color:var(--accent-dim);color:var(--accent);">◈ &nbsp;Custom Formation</button>
+  </div>`;
+}
+
+function selectBlock(start,end){
+  isCustomMode=false;currentBlockStart=start;currentBlockEnd=end;
+  sessionWords=shuffle(words.slice(start,end).filter(w=>!w.nextReview||w.nextReview<=Date.now()));
+  currentStepAmount=sessionWords.length;
+  playedGroups[currentProfile+"-"+start+"-"+end]=true;saveAll();renderMode();
+}
+function renderCustomBlock(){
+  let total=words.length,size=stepSize,checkboxes="";
+  for(let s=0;s<total;s+=size){let e=Math.min(s+size,total);checkboxes+=`<label style="display:block;margin:8px 0;"><input type="checkbox" value="${s}-${e}"> ${s+1}–${e}</label>`;}
+  app.innerHTML=`<div class="container"><div class="ark-header"><button class="back" data-action="chooseStepBack">BACK</button><div class="ark-title">Custom <span>Formation</span></div></div><div class="ark-section">SELECT ZONES</div>${checkboxes}<button data-action="startCustomBlock" style="justify-content:center;margin-top:12px;">⬛ DEPLOY FORMATION</button></div>`;
+}
+function startCustomBlock(){
+  let sel=document.querySelectorAll("input[type=checkbox]:checked");
+  if(!sel.length)return alert("Select at least 1 block");
+  isCustomMode=true;customPool=[];
+  sel.forEach(cb=>{let[s,e]=cb.value.split("-").map(Number);customPool.push(...words.slice(s,e));});
+  sessionWords=shuffle(customPool.filter(w=>!w.nextReview||w.nextReview<=Date.now()));
+  currentStepAmount=sessionWords.length;renderMode();
+}
+function startAll(){currentStepAmount=words.length;sessionWords=shuffle([...words]);renderMode();}
+
+/* ── MODE / TYPE ── */
+function renderMode(){
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button class="back" data-action="renderGroup">BACK</button><div class="ark-title">Combat <span>Config</span></div></div>
+    <div class="ark-section">ENGAGEMENT MODE</div>
+    <button data-action="selectMode:choice">◈ &nbsp;Multi-Choice Protocol</button>
+    <button data-action="selectMode:typing">✎ &nbsp;Manual Input Protocol</button>
+    <button data-action="renderCurrentStepKotoba">▣ &nbsp;Intelligence Briefing</button>
+    <div class="ark-section">PARAMETERS</div>
+    <label style="font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text-dim);display:block;margin-bottom:4px;">RESPONSE DELAY (SEC)</label>
+    <input type="number" min="0.5" step="0.5" value="${answerDelay/1000}" id="inp-delay" style="max-width:160px;">
+    <hr>
+    <label><input type="checkbox" id="inp-hardcore" ${hardcoreMode?'checked':''}><span style="color:var(--red);font-family:'Rajdhani',sans-serif;font-size:15px;letter-spacing:2px;">HARDCORE MODE ☠</span></label>
+    <div style="margin-top:8px;">
+      <label style="font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text-dim);display:block;margin-bottom:4px;">TIMER LIMIT (0.1–4 SEC)</label>
+      <input type="number" min="0.1" max="4" step="0.1" value="${hardcoreTimer/1000}" id="inp-hctimer" style="max-width:160px;">
+    </div>
+  </div>`;
+  document.getElementById("inp-delay").addEventListener("change",function(){answerDelay=this.value*1000;});
+  document.getElementById("inp-hardcore").addEventListener("change",function(){hardcoreMode=this.checked;});
+  document.getElementById("inp-hctimer").addEventListener("change",function(){hardcoreTimer=this.value*1000;});
+}
+function selectMode(mode){gameMode=mode;renderType();}
+function renderType(){
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button class="back" data-action="renderMode">BACK</button><div class="ark-title">Training <span>Type</span></div></div>
+    <div class="ark-section">SELECT DRILL</div>
+    <button data-action="startGame:kanji-hira">Kanji → Hiragana</button>
+    <button data-action="startGame:kanji-arti">Kanji → Meaning</button>
+    <button data-action="startGame:hira-kanji">Hiragana → Kanji</button>
+    <button data-action="startGame:arti-kanji">Meaning → Kanji</button>
+  </div>`;
+}
+function renderCurrentStepKotoba(){
+  let pool=isCustomMode?customPool:words.slice(currentBlockStart,currentBlockEnd);
+  let title=isCustomMode?"Custom Block":`${currentBlockStart+1}–${currentBlockEnd}`;
+  let list=pool.map(w=>`<li style="padding:6px 12px;border-left:2px solid var(--border);margin:3px 0;font-family:'Share Tech Mono',monospace;font-size:11px;background:var(--bg-card);list-style:none;"><b style="font-size:15px;font-family:'Rajdhani',sans-serif;">${w.kanji}</b> <span style="color:var(--accent);">${w.hira}</span> <span style="color:var(--text-dim);">— ${w.arti}</span></li>`).join('');
+  app.innerHTML=`<div class="container"><div class="ark-header"><button class="back" data-action="renderMode">BACK</button><div class="ark-title">Intel <span>Briefing</span></div></div><div class="ark-section">ZONE: ${title}</div><ul style="padding:0;">${list}</ul></div>`;
+}
+
+/* ── GAME ── */
+function startGame(type){
+  gameType=type;sessionCorrect=0;sessionTotal=sessionWords.length;sessionWrong=0;combo=0;sessionComboMax=0;
+  if(!sessionWords.length){alert("No words available!");renderGroup();return;}
+  if(hardcoreMode)lives=4;
+  sessionXpStart=globalStats.xp;sessionLevelStart=globalStats.level;sessionXpGain=0;
+  nextWord();
+}
+function nextWord(){clearTimeout(timerInterval);if(!sessionWords||!sessionWords.length){renderSummary();return;}currentWord=sessionWords.pop();renderGame();}
+
+function renderGame(){
+  isLocked=false;
+  let q="",c="";
+  if(gameType==="kanji-hira"){q=currentWord.kanji;c=currentWord.hira;}
+  if(gameType==="kanji-arti"){q=currentWord.kanji;c=currentWord.arti;}
+  if(gameType==="hira-kanji"){q=currentWord.hira; c=currentWord.kanji;}
+  if(gameType==="arti-kanji"){q=currentWord.arti; c=currentWord.kanji;}
+
+  let furiganaButton="",furiganaDisplay="";
+  if(gameType!=="kanji-hira"){
+    furiganaButton=`<button id="btn-reveal-hira" style="width:auto;padding:6px 16px;font-size:11px;justify-content:center;border-color:var(--accent-dim);color:var(--accent-dim);">◈ REVEAL HIRAGANA</button>`;
+    furiganaDisplay=`<div id="furigana" style="display:none;">${currentWord.hira}</div>`;
+  }
+
+  let mult=comboMultiplier(combo);
+  let comboHtml=combo>=3?`<div class="combo-display">COMBO ×${combo} <span style="font-size:14px;color:var(--text-dim);">[${mult}×XP]</span></div>`:"";
+
+  let inputHtml="";
+  if(gameMode==="typing"){
+    inputHtml=`<input id="ans" type="text" style="width:100%;font-size:20px;text-align:center;letter-spacing:3px;" placeholder="// INPUT ANSWER //"><button id="btnTyping" style="margin-top:6px;justify-content:center;">⬛ CONFIRM</button><div id="info"></div>`;
+  }
+  let choiceButtons="";
+  if(gameMode==="choice"){
+    let options=shuffle([c,...getOptions(c)]);
+    options.forEach(opt=>{choiceButtons+=`<button class="choiceBtn" data-val="${opt}">${opt}</button>`;});
+  }
+  let timerBar="";
+  if(hardcoreMode){
+    timerBar=`<div class="ark-progress"><div id="timerFill" class="ark-progress-fill" style="width:100%;transition:width linear ${hardcoreTimer}ms;background:linear-gradient(90deg,#c94040,#e87070);"></div></div>`;
+  }
+  let progress=sessionTotal>0?Math.floor(((sessionTotal-sessionWords.length)/sessionTotal)*100):0;
+
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button class="back" data-action="exitGame">EXIT</button><div class="ark-title">Field <span>Op</span></div><div class="ark-badge" style="margin-left:auto;">${sessionWords.length} LEFT</div></div>
+    <div class="ark-progress"><div class="ark-progress-fill" style="width:${progress}%;"></div></div>
+    ${hardcoreMode?`<div class="ark-lives">❤ LIVES: ${lives}</div>`:""}
+    ${comboHtml}
+    <div class="card">${q}</div>
+    ${furiganaButton}${timerBar}${furiganaDisplay}
+    <div>${inputHtml}${choiceButtons}</div>
+  </div>`;
+
+  if(hardcoreMode){
+    setTimeout(()=>{let f=document.getElementById("timerFill");if(f)f.style.width="0%";},50);
+    timerInterval=setTimeout(handleHardcoreFail,hardcoreTimer);
+  }
+  let revealBtn=document.getElementById("btn-reveal-hira");
+  if(revealBtn) revealBtn.addEventListener("click",()=>{let fg=document.getElementById("furigana");if(fg)fg.style.display="block";});
+  if(gameMode==="choice"){
+    document.querySelectorAll(".choiceBtn").forEach(btn=>{
+      btn.addEventListener("click",()=>checkChoice(btn.getAttribute("data-val"),c));
+    });
+  }
+  if(gameMode==="typing"){
+    document.getElementById("btnTyping").addEventListener("click",()=>checkTyping(c));
+    document.getElementById("ans").addEventListener("keydown",e=>{if(e.key==="Enter")checkTyping(c);});
+  }
+}
+
+function checkTyping(correct){
+  if(isLocked)return;isLocked=true;
+  if(hardcoreMode)clearTimeout(timerInterval);
+  let input=document.getElementById("ans"),val=input.value.trim(),info=document.getElementById("info");
+  if(val===correct){input.style.borderColor="#3a9a5c";info.innerHTML=`<span style="color:#5ecf8a;">✅ CORRECT</span>`;}
+  else{input.style.borderColor="#c94040";info.innerHTML=`<span style="color:#e86060;">✗ WRONG — ANSWER: <b>${correct}</b></span>`;}
+  processAnswer(val===correct);
+}
+function checkChoice(sel,correct){
+  if(isLocked)return;isLocked=true;
+  document.querySelectorAll(".choiceBtn").forEach(b=>{b.disabled=true;if(b.getAttribute("data-val")===correct)b.classList.add("correct");if(b.getAttribute("data-val")===sel&&sel!==correct)b.classList.add("wrong");});
+  processAnswer(sel===correct);
+}
+function handleHardcoreFail(){
+  if(isLocked)return;isLocked=true;combo=0;sessionWrong++;lives--;
+  globalStats.xp=Math.max(0,globalStats.xp-15);
+  if(lives<=0){showGameOver();return;}
+  nextWord();
+}
+function showGameOver(){
+  app.innerHTML=`<div class="container" style="text-align:center;padding-top:60px;">
+    <div class="ark-header"><div class="ark-title">Game <span>Over</span></div></div>
+    <div style="font-size:60px;margin:20px 0;">☠</div>
+    <div style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--red);letter-spacing:4px;">OPERATOR DOWN</div>
+    <div class="ark-stat-row" style="margin-top:24px;">
+      <div class="ark-stat"><div class="ark-stat-label">Correct</div><div class="ark-stat-value" style="color:var(--green);">${sessionCorrect}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Max Combo</div><div class="ark-stat-value">${sessionComboMax}</div></div>
+    </div>
+    <button data-action="renderGroup" style="justify-content:center;margin-top:16px;">↩ RETURN TO BASE</button>
+  </div>`;
+}
+
+function processAnswer(isCorrect){
+  let prof=profiles[currentProfile];
+  if(!prof){renderMenu();return;}
+  let word=prof.words.find(w=>w.kanji===currentWord.kanji);
+  if(!word){word={kanji:currentWord.kanji,hira:currentWord.hira||'',arti:currentWord.arti||'',correct:0,wrong:0};prof.words.push(word);}
+  if(hardcoreMode)clearTimeout(timerInterval);
+  let xpBase=10,flags={};
+
+  if(isCorrect){
+    combo++;if(combo>sessionComboMax)sessionComboMax=combo;
+    let mult=comboMultiplier(combo);
+    let xpGained=Math.round(xpBase*mult*(hardcoreMode?1.5:1));
+    word.correct++;sessionCorrect++;
+    prof.xp=(prof.xp||0)+xpGained;
+    globalStats.xp+=xpGained;sessionXpGain+=xpGained;
+    globalStats.totalCorrect=(globalStats.totalCorrect||0)+1;
+    flags._combo=sessionComboMax;
+    if(sessionWrong===0&&sessionCorrect>=10)flags._perfect=true;
+    updateDailyProgress("correct",1);
+    if(combo>(dailyProgress.combo||0)){updateDailyProgress("combo",combo-(dailyProgress.combo||0));}
+    if(sessionWrong===0)updateDailyProgress("noerror",1);
+  } else {
+    combo=0;sessionWrong++;word.wrong++;
+    if(hardcoreMode){
+      lives--;
+      globalStats.xp=Math.max(0,globalStats.xp-10);
+      prof.xp=Math.max(0,(prof.xp||0)-10);
+      if(lives<=0){updateSRS(word,false);globalStats.level=calcLevel(globalStats.xp);saveAll();showGameOver();return;}
+    }
+  }
+
+  updateSRS(word,isCorrect);
+  let oldLevel=globalStats.level;
+  globalStats.level=calcLevel(globalStats.xp);
+  saveAll();
+
+  let newAchs=checkAchievements(flags);
+  newAchs.forEach((a,i)=>setTimeout(()=>showAchievementToast(a),i*3300));
+
+  if(globalStats.level>oldLevel){
+    setTimeout(()=>showLevelUp(globalStats.level,()=>setTimeout(()=>nextWord(),200)),answerDelay);
+  } else {
+    setTimeout(()=>nextWord(),answerDelay);
+  }
+}
+
+function exitGame(){
+  if(hardcoreMode){globalStats.xp=Math.max(0,globalStats.xp-30);saveAll();}
+  renderType();
+}
+
+/* ── SUMMARY ── */
+function renderSummary(){
+  // ── Autosave session history ──
+  let accuracy=sessionTotal>0?Math.floor((sessionCorrect/sessionTotal)*100):0;
+  let grade=accuracy>=90?"S":accuracy>=75?"A":accuracy>=55?"B":accuracy>=35?"C":"D";
+  let histEntry={
+    ts:Date.now(),
+    profile:currentProfile,
+    gameType:gameType,
+    gameMode:gameMode,
+    correct:sessionCorrect,
+    total:sessionTotal,
+    wrong:sessionWrong,
+    combo:sessionComboMax,
+    xpGain:sessionXpGain,
+    grade:grade,
+    accuracy:accuracy,
+    hardcore:hardcoreMode,
+    isCustom:isCustomMode
+  };
+  sessionHistory.unshift(histEntry);
+  if(sessionHistory.length>200)sessionHistory=sessionHistory.slice(0,200);
+  globalStats.totalSessions=(globalStats.totalSessions||0)+1;
+  globalStats.level=calcLevel(globalStats.xp);saveAll();
+  updateDailyProgress("sessions",1);
+  let flags={_combo:sessionComboMax};
+  if(sessionWrong===0&&sessionCorrect>=10)flags._perfect=true;
+  if(hardcoreMode&&sessionCorrect===sessionTotal)flags._hardcoreWin=true;
+  let newAchs=checkAchievements(flags);
+  setTimeout(()=>newAchs.forEach((a,i)=>setTimeout(()=>showAchievementToast(a),i*3300)),800);
+
+  let gradeColor=grade==="S"?"#e8a838":grade==="A"?"#3a9a5c":grade==="B"?"#3a72b0":grade==="C"?"#c9a030":"#c94040";
+  let levelUpText=globalStats.level>sessionLevelStart?`<div style="color:var(--accent);font-family:'Rajdhani',sans-serif;font-size:18px;letter-spacing:3px;margin:10px 0;text-align:center;">⬡ LEVEL UP: ${sessionLevelStart} → ${globalStats.level}</div>`:"";
+
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><div class="ark-title">Mission <span>Report</span></div></div>
+    <div style="text-align:center;padding:16px 0;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text-dim);">GRADE</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:90px;font-weight:700;color:${gradeColor};line-height:1;text-shadow:0 0 40px ${gradeColor}88;">${grade}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:2px;">${accuracy}% ACCURACY</div>
+    </div>
+    ${renderXpBar()}
+    <div class="ark-stat-row">
+      <div class="ark-stat"><div class="ark-stat-label">Correct</div><div class="ark-stat-value" style="color:var(--green);">${sessionCorrect}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Total</div><div class="ark-stat-value">${sessionTotal}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">XP Gain</div><div class="ark-stat-value">+${sessionXpGain}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Max Combo</div><div class="ark-stat-value" style="color:var(--accent2);">${sessionComboMax}</div></div>
+    </div>
+    ${levelUpText}
+    <button id="backBtn" disabled style="justify-content:center;margin-top:16px;">⬡ RETURN TO BASE</button>
+  </div>`;
+  setTimeout(()=>document.getElementById("backBtn").disabled=false,500);
+  document.getElementById("backBtn").addEventListener("click",()=>renderGroup());
+  setTimeout(renderGroup,6000);
+}
+
+/* ── STATS ── */
+function renderStats(){
+  let cp=currentProfile&&profiles[currentProfile]?profiles[currentProfile]:null;
+  let pXP=cp?(cp.xp||0):0;
+  let pLv=calcLevel(pXP),totalWords=cp?(cp.words||[]).length:0;
+  let mastered=0,correct=0,wrong=0;
+  if(cp)(cp.words||[]).forEach(w=>{correct+=(w.correct||0);wrong+=(w.wrong||0);if((w.correct||0)>=5)mastered++;});
+  let mastPct=totalWords>0?Math.floor((mastered/totalWords)*100):0;
+  let unlocked=ACHIEVEMENTS.filter(a=>achievements[a.id]).length;
+  let pRank=getRankTitle(pLv);
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button class="back" data-action="renderMenu">BACK</button><div class="ark-title">Combat <span>Records</span></div></div>
+    ${renderXpBar()}
+    <div class="ark-section">GLOBAL STATS</div>
+    <div class="ark-stat-row">
+      <div class="ark-stat"><div class="ark-stat-label">Global LV</div><div class="ark-stat-value">${globalStats.level}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Total XP</div><div class="ark-stat-value">${globalStats.xp}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Achievements</div><div class="ark-stat-value">${unlocked}/${ACHIEVEMENTS.length}</div></div>
+    </div>
+    <div class="ark-stat-row">
+      <div class="ark-stat"><div class="ark-stat-label">Total Correct</div><div class="ark-stat-value" style="color:var(--green);">${globalStats.totalCorrect||0}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Sessions</div><div class="ark-stat-value">${globalStats.totalSessions||0}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Streak</div><div class="ark-stat-value">${globalStats.grindDays||0}d</div></div>
+    </div>
+    <div class="ark-section">OPERATOR: ${currentProfile||'NONE'}</div>
+    <div class="ark-stat-row">
+      <div class="ark-stat"><div class="ark-stat-label">Op. Level</div><div class="ark-stat-value" style="color:${pRank.color};">${pLv}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Rank</div><div class="ark-stat-value" style="font-size:11px;color:${pRank.color};">${pRank.title}</div></div>
+    </div>
+    <div class="ark-section">VOCABULARY INTEL</div>
+    <div class="ark-stat-row">
+      <div class="ark-stat"><div class="ark-stat-label">Total</div><div class="ark-stat-value">${totalWords}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Correct</div><div class="ark-stat-value" style="color:var(--green);">${correct}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Wrong</div><div class="ark-stat-value" style="color:var(--red);">${wrong}</div></div>
+    </div>
+    <div style="margin:12px 0 6px;"><div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px;">MASTERY — ${mastered}/${totalWords} (${mastPct}%)</div><div class="ark-progress"><div class="ark-progress-fill" style="width:${mastPct}%;"></div></div></div>
+    <button data-action="renderAchievements" style="margin-top:12px;border-color:var(--accent-dim);color:var(--accent);">🏆 VIEW ACHIEVEMENTS</button>
+  </div>`;
+}
+
+/* ── KOTOBA ── */
+function renderKotoba(){
+  if(!currentProfile){alert("Select a profile first!");return;}
+  let cp=profiles[currentProfile];
+  if(!cp||!Array.isArray(cp.words)){alert("Operator data missing. Please re-import.");return;}
+  let list=cp.words.map(w=>{let done=(w.correct||0)>=5;return `<li style="padding:8px 12px;border-left:2px solid ${done?'var(--green)':'var(--border)'};margin:3px 0;font-family:'Share Tech Mono',monospace;font-size:11px;background:var(--bg-card);color:${done?'var(--green)':'var(--text)'};list-style:none;">${done?'✓ ':'  '}<b style="font-size:15px;font-family:'Rajdhani',sans-serif;">${w.kanji}</b> <span style="color:var(--accent);">${w.hira}</span> <span style="color:var(--text-dim);">— ${w.arti}</span></li>`;}).join('');
+  app.innerHTML=`<div class="container"><div class="ark-header"><button class="back" data-action="renderMenu">BACK</button><div class="ark-title">Vocab <span>Database</span></div></div><div class="ark-section">INTELLIGENCE FILE — ${cp.words.length} ENTRIES</div><ul style="padding:0;">${list}</ul></div>`;
+}
+
+/* ── SHARE ── */
+function renderShare(){
+  if(!currentProfile)return alert("Select a profile first!");
+  let p=profiles[currentProfile];
+  if(!p||!Array.isArray(p.words)){alert("Operator data missing. Please re-import.");return;}
+  let mastered=p.words.filter(w=>(w.correct||0)>=5),learning=p.words.filter(w=>(w.correct||0)>0&&(w.correct||0)<5);
+  let pct=p.words.length>0?Math.floor((mastered.length/p.words.length)*100):0,rank=getRankTitle(globalStats.level);
+  let unlocked=ACHIEVEMENTS.filter(a=>achievements[a.id]).length;
+  let text=`📘 Kotoba Trainer Progress\n👤 Operator: ${currentProfile}\n⭐ Global Level: ${globalStats.level} (${rank.title})\n💠 Global XP: ${globalStats.xp}\n🔥 Streak: ${globalStats.grindDays} days\n🏆 Achievements: ${unlocked}/${ACHIEVEMENTS.length}\n\n📊 Mastered: ${mastered.length}/${p.words.length} (${pct}%)\n✅ ${mastered.map(w=>`${w.kanji}(${w.hira})`).join(', ')||'-'}\n📖 Learning: ${learning.map(w=>w.kanji).join(', ')||'-'}\n\n#KotobaTrainer #RhodesIsland`;
+  app.innerHTML=`<div class="container"><div class="ark-header"><button class="back" data-action="renderMenu">BACK</button><div class="ark-title">Transmit <span>Progress</span></div></div><div class="ark-section">ENCODED REPORT</div><textarea id="shareText" style="width:100%;height:240px;font-size:11px;">${text}</textarea><button id="btn-copy-share" style="justify-content:center;margin-top:8px;">⇪ &nbsp;COPY TRANSMISSION</button></div>`;
+  document.getElementById("btn-copy-share").addEventListener("click",()=>navigator.clipboard.writeText(document.getElementById("shareText").value));
+}
+
+/* ── UTIL ── */
+function updateSRS(word,isCorrect){
+  if(!word.ease)word.ease=2.5;if(!word.interval)word.interval=1;
+  if(isCorrect){word.ease=Math.min(3,word.ease+0.1);word.interval=Math.round(word.interval*word.ease);}
+  else{word.ease=Math.max(1.3,word.ease-0.2);word.interval=1;}
+  word.nextReview=Date.now()+(word.interval*24*60*60*1000);
+}
+function getBlockProgress(start,end){
+  let bw=words.slice(start,end);if(!bw.length)return 0;
+  let cp=currentProfile&&profiles[currentProfile]?profiles[currentProfile]:null;
+  if(!cp||!Array.isArray(cp.words))return 0;
+  let m=bw.filter(w=>{let o=cp.words.find(p=>p.kanji===w.kanji);return o&&(o.correct||0)>=5;}).length;
+  return Math.floor((m/bw.length)*100);
+}
+function getRankStyle(percent){
+  if(percent===100)return{color:"#9c27b0",emoji:" 👑",glow:"0 0 12px rgba(156,39,176,0.6)"};
+  if(percent>=70)return{color:"#2196F3",emoji:"",glow:"none"};
+  if(percent>=30)return{color:"#FFC107",emoji:"",glow:"none"};
+  return{color:"#e74c3c",emoji:"",glow:"none"};
+}
+function getOptions(correct){
+  let pool=isCustomMode?customPool:words.slice(currentBlockStart,currentBlockEnd);
+  let arr=pool.map(w=>{if(gameType==="kanji-hira")return w.hira;if(gameType==="kanji-arti")return w.arti;return w.kanji;}).filter(x=>x!==correct);
+  return shuffle(arr).slice(0,3);
+}
+
+
+/* ── SESSION HISTORY ── */
+function renderHistory(){
+  let hist=sessionHistory;
+  if(!hist.length){
+    app.innerHTML=`<div class="container"><div class="ark-header"><button class="back" data-action="renderMenu">BACK</button><div class="ark-title">Session <span>History</span></div></div><div class="ark-section">NO DATA</div><div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);padding:20px 0;text-align:center;">// NO SESSIONS RECORDED YET //</div></div>`;
+    return;
+  }
+  let typeLabels={"kanji-hira":"K→H","kanji-arti":"K→M","hira-kanji":"H→K","arti-kanji":"M→K"};
+  let gradeColor=g=>g==="S"?"#e8a838":g==="A"?"#3a9a5c":g==="B"?"#3a72b0":g==="C"?"#c9a030":"#c94040";
+  let cards=hist.slice(0,50).map((h,i)=>{
+    let d=new Date(h.ts);
+    let dateStr=d.toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'})+" "+d.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    let mode=h.gameMode==="choice"?"MC":"TYPE";
+    let type=typeLabels[h.gameType]||h.gameType||"?";
+    let gc=gradeColor(h.grade||"D");
+    return `<div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid ${gc};padding:10px 14px;margin:5px 0;display:flex;align-items:center;gap:12px;clip-path:polygon(8px 0%,100% 0%,100% calc(100% - 8px),calc(100% - 8px) 100%,0% 100%,0% 8px);">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:${gc};min-width:28px;text-align:center;text-shadow:0 0 12px ${gc}88;">${h.grade||"?"}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--text-bright);letter-spacing:1px;">${h.profile||'?'} <span style="font-size:10px;color:var(--accent);font-family:'Share Tech Mono',monospace;">${type} · ${mode}${h.hardcore?" · HC":""}</span></div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:2px;">${dateStr}</div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#3a9a5c;">✓ ${h.correct}</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#c94040;">✗ ${h.wrong||0}</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent);">+${h.xpGain||0}XP</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent2);">×${h.combo||0}</span>
+        </div>
+      </div>
+      <div style="text-align:right;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);">${h.accuracy||0}%</div>
+    </div>`;
+  }).join('');
+  let totalSess=hist.length,avgAcc=hist.length?Math.floor(hist.reduce((s,h)=>s+(h.accuracy||0),0)/hist.length):0;
+  let bestGrade=["S","A","B","C","D"].find(g=>hist.some(h=>h.grade===g))||"—";
+  let totalXpEarned=hist.reduce((s,h)=>s+(h.xpGain||0),0);
+  app.innerHTML=`<div class="container">
+    <div class="ark-header"><button class="back" data-action="renderMenu">BACK</button><div class="ark-title">Session <span>History</span></div><div class="ark-badge" style="margin-left:auto;">${totalSess} RUNS</div></div>
+    <div class="ark-stat-row">
+      <div class="ark-stat"><div class="ark-stat-label">Sessions</div><div class="ark-stat-value">${totalSess}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Avg Acc.</div><div class="ark-stat-value">${avgAcc}%</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Best</div><div class="ark-stat-value" style="color:${gradeColor(bestGrade)};">${bestGrade}</div></div>
+      <div class="ark-stat"><div class="ark-stat-label">Total XP</div><div class="ark-stat-value">+${totalXpEarned}</div></div>
+    </div>
+    <div class="ark-section">RECENT OPERATIONS — LAST ${Math.min(50,hist.length)}</div>
+    ${cards}
+    ${hist.length>0?`<button data-action="clearHistory" style="margin-top:12px;border-color:rgba(201,64,64,0.4);color:var(--text-dim);justify-content:center;">✕ &nbsp;CLEAR HISTORY</button>`:''}
+  </div>`;
+}
+
+/* ── BOOT ── */
+updateDailyStreak();
+ensureDailyMissions();
+
+/* ── GLOBAL ACTION DISPATCHER ──
+   All buttons use data-action="fnName" or data-action="fnName:arg1:arg2"
+   This one listener handles everything — works in PWA, no CSP issues ── */
+app.addEventListener("click", function(e){
+  let btn=e.target.closest("[data-action]");
+  if(!btn) return;
+  let parts=btn.getAttribute("data-action").split(":");
+  let action=parts[0], args=parts.slice(1);
+  switch(action){
+    case "renderMenu":           renderMenu(); break;
+    case "renderProfile":        renderProfile(); break;
+    case "renderStats":          renderStats(); break;
+    case "renderAchievements":   renderAchievements(); break;
+    case "renderDailyMissions":  renderDailyMissions(); break;
+    case "renderKotoba":         renderKotoba(); break;
+    case "renderHistory":        renderHistory(); break;
+    case "renderShare":          renderShare(); break;
+    case "renderGroup":          renderGroup(); break;
+    case "renderMode":           renderMode(); break;
+    case "renderCustomAmount":   renderCustomAmount(); break;
+    case "renderCustomBlock":    renderCustomBlock(); break;
+    case "renderCurrentStepKotoba": renderCurrentStepKotoba(); break;
+    case "startAll":             startAll(); break;
+    case "startCustomAmount":    startCustomAmount(); break;
+    case "startCustomBlock":     startCustomBlock(); break;
+    case "exitGame":             exitGame(); break;
+    case "deleteProfileMenu":    deleteProfileMenu(); break;
+    case "revealFurigana":       {let fg=document.getElementById("furigana");if(fg)fg.style.display="block";} break;
+    case "chooseStep":           chooseStep(parseInt(args[0])); break;
+    case "chooseStepBack":       chooseStep(stepSize); break;
+    case "selectMode":           selectMode(args[0]); break;
+    case "startGame":            startGame(args[0]); break;
+    case "stepAmt":              stepAmt(parseInt(args[0])); break;
+    case "selectBlock":          selectBlock(parseInt(args[0]),parseInt(args[1])); break;
+    case "clearHistory":
+      if(confirm("Clear all session history?")){sessionHistory=[];saveAll();renderHistory();}
+      break;
+  }
+});
+
+renderMenu();
+
+/* ── CLEANUP: Kill all service workers immediately ── */
+if('serviceWorker' in navigator){
+  // If a SW is currently controlling this page, unregister and hard reload once
+  if(navigator.serviceWorker.controller){
+    navigator.serviceWorker.getRegistrations().then(regs=>{
+      Promise.all(regs.map(r=>r.unregister())).then(()=>{
+        // Only reload if we haven't already done so (prevent reload loop)
+        if(!sessionStorage.getItem('sw_cleared')){
+          sessionStorage.setItem('sw_cleared','1');
+          location.reload();
+        }
+      });
+    }).catch(()=>{});
+  } else {
+    // No active SW controller - just clean up any registered ones silently
+    navigator.serviceWorker.getRegistrations().then(regs=>{
+      regs.forEach(r=>r.unregister());
+    }).catch(()=>{});
+  }
+}
+
+/* ── Load fonts non-blocking after app is rendered ── */
+(function(){
+  try{
+    let link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700&display=swap';
+    document.head.appendChild(link);
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
